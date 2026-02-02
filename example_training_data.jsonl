@@ -1,0 +1,4 @@
+{"audio_path": "/path/to/your/data/speaker1/audio_001.wav", "text": "这是一段示例文本，用于训练情感适配器。", "speaker_id": 0, "speaker_ref_audio": "/path/to/your/data/speaker1/audio_002.wav", "emotion_ref_audio": "/path/to/your/data/speaker1/audio_001.wav"}
+{"audio_path": "/path/to/your/data/speaker1/audio_003.wav", "text": "今天天气真不错，心情也很好。", "speaker_id": 0, "speaker_ref_audio": "/path/to/your/data/speaker1/audio_002.wav", "emotion_ref_audio": "/path/to/your/data/speaker1/audio_003.wav"}
+{"audio_path": "/path/to/your/data/speaker2/audio_001.wav", "text": "我感到有些难过，不想说话。", "speaker_id": 1, "speaker_ref_audio": "/path/to/your/data/speaker2/audio_002.wav", "emotion_ref_audio": "/path/to/your/data/speaker2/audio_001.wav"}
+{"audio_path": "/path/to/your/data/speaker2/audio_003.wav", "text": "这件事让我非常生气！", "speaker_id": 1, "speaker_ref_audio": "/path/to/your/data/speaker2/audio_002.wav", "emotion_ref_audio": "/path/to/your/data/speaker2/audio_003.wav"}
