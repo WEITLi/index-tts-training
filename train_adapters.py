@@ -4,6 +4,10 @@ IndexTTS Emotion Adapter Fine-tuning Script
 This script implements Stage 2 training: Fine-tune Emotion Perceiver with GRL-based
 speaker-emotion disentanglement while keeping GPT and Speaker Perceiver frozen.
 
+Now with FULL AR Loss + Adversarial Loss:
+- AR Loss: Ensures synthesized speech quality is preserved
+- Adversarial Loss: Ensures emotion embedding is speaker-invariant
+
 Usage:
     python train_adapters.py --data_path ./data.jsonl --epochs 10 --batch_size 2
 
@@ -11,6 +15,7 @@ Reference: IndexTTS paper - Stage 2 training with GRL for speaker-emotion disent
 """
 
 import argparse
+import os
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
@@ -20,6 +25,8 @@ from omegaconf import OmegaConf
 # IndexTTS imports
 from indextts.gpt.model_v2 import UnifiedVoice
 from indextts.utils.checkpoint import load_checkpoint
+from indextts.text.tokenizer import TextTokenizer
+from indextts.text.preprocess import TextNormalizer
 
 # Training module imports
 from indextts.training import (
@@ -50,7 +57,9 @@ def main():
     parser.add_argument('--lr', type=float, default=1e-4, 
                         help='Learning rate')
     parser.add_argument('--alpha', type=float, default=0.1, 
-                        help='GRL loss weight')
+                        help='Adversarial loss weight')
+    parser.add_argument('--ar_loss_weight', type=float, default=1.0, 
+                        help='AR loss weight')
     parser.add_argument('--device', type=str, default=None, 
                         help='Device (cuda/cpu)')
     parser.add_argument('--resume', type=str, default=None, 
@@ -91,6 +100,14 @@ def main():
     model = model.to(device)
     print(f"[Model] Loaded from {gpt_path}")
     
+    # Load tokenizer (required for AR loss)
+    print("\n[Tokenizer] Loading TextTokenizer...")
+    bpe_path = os.path.join(args.model_dir, cfg.dataset["bpe_model"])
+    normalizer = TextNormalizer(enable_glossary=True)
+    normalizer.load()
+    tokenizer = TextTokenizer(bpe_path, normalizer)
+    print(f"[Tokenizer] Loaded from {bpe_path}")
+    
     # Create speaker classifier
     speaker_classifier = SpeakerClassifier(
         input_dim=cfg.gpt.model_dim,
@@ -99,8 +116,8 @@ def main():
         grl_alpha=1.0
     ).to(device)
     
-    # Feature extractor
-    print("\n[FeatureExtractor] Loading W2V-BERT...")
+    # Feature extractor (includes semantic codec for mel codes)
+    print("\n[FeatureExtractor] Loading W2V-BERT and Semantic Codec...")
     feature_extractor = FeatureExtractor(args.model_dir, device)
     
     # Configure trainable parameters
@@ -126,15 +143,17 @@ def main():
         ) + 1
         print(f"[Resume] Starting from epoch {start_epoch}")
     
-    # Create trainer
+    # Create trainer with tokenizer
     trainer = AdapterTrainer(
         model=model,
         speaker_classifier=speaker_classifier,
         feature_extractor=feature_extractor,
+        tokenizer=tokenizer,  # Required for AR loss
         optimizer=optimizer,
         scheduler=scheduler,
         device=device,
         alpha=args.alpha,
+        ar_loss_weight=args.ar_loss_weight,
     )
     
     # Run training

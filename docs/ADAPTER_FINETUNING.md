@@ -27,8 +27,10 @@ python train_adapters.py \
     --data_path ./your_data.jsonl \
     --epochs 10 \
     --batch_size 2 \
-    --alpha 0.1
+    --alpha 0.1 \
+    --ar_loss_weight 1.0
 ```
+
 
 ### 3. 参数说明
 
@@ -39,6 +41,8 @@ python train_adapters.py \
 | `--batch_size` | 2 | 批次大小 |
 | `--lr` | 1e-4 | 学习率 |
 | `--alpha` | 0.1 | GRL 对抗损失权重 |
+| `--ar_loss_weight` | 1.0 | 自回归重构损失权重 |
+
 
 ### 4. 加载微调权重
 
